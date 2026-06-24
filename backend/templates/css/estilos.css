@@ -1,0 +1,43 @@
+.bg-maroon {
+    background-color: #6d0035;
+}
+
+.btn-maroon {
+    background-color: #6d0035;
+    color: white;
+    border-color: #6d0035;
+}
+
+.btn-maroon:hover {
+    background-color: #8a0045;
+    border-color: #8a0045;
+}
+
+.logo-header {
+    height: 60px;
+}
+
+.card-login {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.centrar-pantalla {
+    min-height: calc(80vh - 140px);
+    display: flex;
+    justify-content: center;
+    align-items: center;    
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+footer {
+    margin-top: auto;
+}

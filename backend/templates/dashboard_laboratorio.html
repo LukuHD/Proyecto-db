@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HospitalSys - Laboratorio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root { --azul-header:#34495e; --azul-btn:#347ebb; --bg-sidebar:#ecf0f1; }
+    body { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#fdfdfd; margin:0; }
+    .top-header { background:var(--azul-header); color:white; padding:10px 20px; display:flex; justify-content:space-between; align-items:center; }
+    .top-header h4 { margin:0; font-size:18px; font-weight:600; }
+    .user-info { font-size:14px; color:#dcdde1; }
+    .main-wrapper { display:flex; min-height:calc(100vh - 44px); }
+    .sidebar { width:250px; background:var(--bg-sidebar); border-right:1px solid #ddd; flex-shrink:0; }
+    .sidebar-menu { list-style:none; padding:0; margin:0; }
+    .sidebar-menu li { border-bottom:1px solid #e0e0e0; }
+    .sidebar-menu a { display:block; padding:15px 20px; color:#333; text-decoration:none; font-size:14px; cursor:pointer; }
+    .sidebar-menu a.active { background:#dbe4eb; color:var(--azul-btn); font-weight:bold; border-left:4px solid var(--azul-btn); }
+    .content { flex-grow:1; padding:30px; max-width:1050px; }
+    .page-title { font-size:22px; font-weight:bold; color:#2c3e50; margin-bottom:20px; }
+    .badge-estado { font-weight:600; border-radius:12px; padding:5px 14px; font-size:12px; display:inline-block; min-width:90px; text-align:center; }
+    .solicitado { background:#fdebd0; color:#d35400; }
+    .realizado { background:#d6eaf8; color:#2980b9; }
+    .liberado { background:#d4efdf; color:#27ae60; }
+    .cancelado { background:#f2f3f4; color:#7f8c8d; }
+    .table-hover tbody tr:hover { cursor:pointer; background:#f1f4f6; }
+    .info-box { border:1px solid #dcdde1; border-radius:6px; padding:15px; background:#f8f9fa; margin-bottom:20px; font-size:14px; }
+    .btn-guardar { background:white; color:var(--azul-btn); border:1px solid var(--azul-btn); padding:8px 24px; font-weight:600; border-radius:4px; }
+    .btn-liberar { background:#27ae60; color:white; padding:8px 24px; border:none; font-weight:600; border-radius:4px; }
+    .btn-primario { background:var(--azul-btn); color:white; border:0; padding:8px 20px; font-weight:600; border-radius:4px; }
+    .panel { border:1px solid #dee2e6; border-radius:6px; padding:18px; background:#f8f9fa; margin-bottom:20px; }
+    .vista { display:none; }
+    .vista.activa { display:block; }
+    pre { white-space:pre-wrap; background:#f8f9fa; border:1px solid #dee2e6; padding:12px; border-radius:6px; }
+  </style>
+</head>
+<body>
+  <header class="top-header">
+    <h4 id="headerTitle">HospitalSys - Bandeja de ordenes</h4>
+    <div class="user-info">Laboratorista - ACT-02</div>
+  </header>
+
+  <div class="main-wrapper">
+    <aside class="sidebar">
+      <ul class="sidebar-menu">
+        <li><a id="navBandeja" class="active" onclick="mostrarVista('bandeja')">Bandeja de ordenes</a></li>
+        <li><a id="navCaptura" onclick="mostrarVista('captura')">Captura de resultados</a></li>
+        <li><a id="navExpedientes" onclick="mostrarVista('expedientes')">Expedientes</a></li>
+        <li><a id="navReportes" onclick="mostrarVista('reportes')">Reportes</a></li>
+      </ul>
+    </aside>
+
+    <main class="content">
+      <div id="vistaBandeja" class="vista activa">
+        <h1 class="page-title">Ordenes de estudio</h1>
+        <div class="d-flex gap-3 mb-4">
+          <input id="filtroOrdenes" type="text" class="form-control w-50" placeholder="Filtrar por folio, paciente o estado..." oninput="renderOrdenes()">
+          <button class="btn-guardar" onclick="toggleOrdenForm()">Registrar orden</button>
+          <button class="btn-primario" onclick="cargarOrdenes()">Actualizar</button>
+        </div>
+        <form id="formOrden" class="panel d-none">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label">ID paciente</label>
+              <input id="ordenPaciente" type="number" class="form-control" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">ID medico</label>
+              <input id="ordenIdMedico" type="number" class="form-control" value="1" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Tipo de estudio</label>
+              <input id="ordenTipo" type="text" class="form-control" value="Biometria hematica" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Fecha solicitud</label>
+              <input id="ordenFecha" type="date" class="form-control" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Medico</label>
+              <input id="ordenMedico" type="text" class="form-control" value="Dr. Rafael Ramirez" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Especialidad</label>
+              <input id="ordenEspecialidad" type="text" class="form-control" value="Cardiologia" required>
+            </div>
+            <div class="col-md-8">
+              <label class="form-label">Descripcion</label>
+              <input id="ordenDescripcion" type="text" class="form-control" value="Estudio previo a consulta de especialidad" required>
+            </div>
+            <div class="col-md-12 d-flex gap-2">
+              <button class="btn-primario" type="submit">Guardar orden</button>
+              <button class="btn-guardar" type="button" onclick="toggleOrdenForm(false)">Cerrar</button>
+            </div>
+          </div>
+          <div id="mensajeOrden" class="mt-3 fw-bold"></div>
+        </form>
+        <table class="table table-hover border">
+          <thead class="table-light">
+            <tr><th>Folio</th><th>Paciente</th><th>Estudio</th><th>Fecha</th><th>Estado</th></tr>
+          </thead>
+          <tbody id="tablaOrdenes"></tbody>
+        </table>
+        <div id="mensajeBandeja" class="mt-2"></div>
+      </div>
+
+      <div id="vistaCaptura" class="vista">
+        <h1 class="page-title">Captura y liberacion de resultados</h1>
+        <div class="info-box">
+          <input type="hidden" id="idOrden">
+          <input type="hidden" id="folioOrden">
+          <strong>Folio:</strong> <span id="lblFolio">Seleccione una orden</span> &nbsp;|&nbsp;
+          <strong>Paciente:</strong> <span id="lblPaciente">-</span> &nbsp;|&nbsp;
+          <strong>Estudio:</strong> <span id="lblEstudio">-</span><br>
+          <span class="mt-2 d-inline-block"><strong>Estado actual:</strong> <span id="lblEstado" style="font-weight:bold;">-</span></span>
+        </div>
+        <table class="table border">
+          <thead class="table-light">
+            <tr><th>Parametro</th><th style="width:200px;">Resultado</th><th>Unidad</th><th>Referencia</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Hemoglobina</td><td><input id="resHemoglobina" type="number" step="0.1" class="form-control form-control-sm resultado-input"></td><td>g/dL</td><td>13.5 - 17.5</td></tr>
+            <tr><td>Leucocitos</td><td><input id="resLeucocitos" type="number" step="0.1" class="form-control form-control-sm resultado-input"></td><td>10^3/uL</td><td>4.0 - 11.0</td></tr>
+            <tr><td>Plaquetas</td><td><input id="resPlaquetas" type="number" class="form-control form-control-sm resultado-input"></td><td>10^3/uL</td><td>150 - 450</td></tr>
+            <tr><td>Hematocrito</td><td><input id="resHematocrito" type="number" class="form-control form-control-sm resultado-input"></td><td>%</td><td>41 - 53</td></tr>
+          </tbody>
+        </table>
+        <div class="mb-4">
+          <label class="form-label text-muted">Observaciones clinicas</label>
+          <textarea id="observacionesClinicas" class="form-control" rows="2"></textarea>
+        </div>
+        <div class="d-flex gap-3 mt-4">
+          <button id="btnGuardarResultados" class="btn-guardar" onclick="guardarResultados()">Guardar (Realizado)</button>
+          <button id="btnLiberarResultados" class="btn-liberar" onclick="procesarLiberacion()">Validar y liberar</button>
+        </div>
+        <div id="mensajeServidorLab" class="mt-3 fw-bold"></div>
+      </div>
+
+      <div id="vistaExpedientes" class="vista">
+        <h1 class="page-title">Expediente del paciente</h1>
+        <div class="d-flex gap-2 mb-3">
+          <input id="idPacienteExpediente" type="number" class="form-control w-25" placeholder="ID paciente">
+          <button class="btn-primario" onclick="consultarExpediente()">Consultar</button>
+        </div>
+        <div id="resultadoExpediente"></div>
+      </div>
+
+      <div id="vistaReportes" class="vista">
+        <h1 class="page-title">Reportes basicos</h1>
+        <button class="btn-primario mb-3" onclick="cargarReportes()">Actualizar reportes</button>
+        <div id="resultadoReportes"></div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    let ordenes = [];
+
+    const headersLab = { "Content-Type": "application/json", "X-Rol": "laboratorista" };
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("ordenFecha").value = new Date().toISOString().slice(0, 10);
+      cargarOrdenes();
+    });
+
+    document.getElementById("formOrden").addEventListener("submit", async function(event) {
+      event.preventDefault();
+      const mensaje = document.getElementById("mensajeOrden");
+      try {
+        const res = await fetch("/api/ordenes", {
+          method: "POST",
+          headers: headersLab,
+          body: JSON.stringify({
+            id_paciente: Number(document.getElementById("ordenPaciente").value),
+            id_medico: Number(document.getElementById("ordenIdMedico").value),
+            tipo_estudio: document.getElementById("ordenTipo").value,
+            fecha_solicitud: document.getElementById("ordenFecha").value,
+            medico: document.getElementById("ordenMedico").value,
+            especialidad: document.getElementById("ordenEspecialidad").value,
+            descripcion: document.getElementById("ordenDescripcion").value
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "No se pudo registrar la orden.");
+        mensaje.className = "mt-3 fw-bold text-success";
+        mensaje.innerText = `Orden registrada. ID orden: ${data.id_orden}. Folio: ${data.folio}.`;
+        await cargarOrdenes();
+      } catch (error) {
+        mensaje.className = "mt-3 fw-bold text-danger";
+        mensaje.innerText = error.message;
+      }
+    });
+
+    function toggleOrdenForm(force) {
+      const form = document.getElementById("formOrden");
+      const show = typeof force === "boolean" ? force : form.classList.contains("d-none");
+      form.classList.toggle("d-none", !show);
+    }
+
+    function mostrarVista(vista) {
+      document.querySelectorAll(".vista").forEach(el => el.classList.remove("activa"));
+      document.querySelectorAll(".sidebar-menu a").forEach(el => el.classList.remove("active"));
+      document.getElementById("vista" + capitalizar(vista)).classList.add("activa");
+      document.getElementById("nav" + capitalizar(vista)).classList.add("active");
+      document.getElementById("headerTitle").innerText = "HospitalSys - " + document.getElementById("nav" + capitalizar(vista)).innerText;
+      if (vista === "bandeja") cargarOrdenes();
+      if (vista === "reportes") cargarReportes();
+    }
+
+    function capitalizar(texto) { return texto.charAt(0).toUpperCase() + texto.slice(1); }
+
+    function badgeEstado(estado) {
+      const clase = (estado || "Solicitado").toLowerCase();
+      return `<span class="badge-estado ${clase}">${estado || "Solicitado"}</span>`;
+    }
+
+    async function cargarOrdenes() {
+      const mensaje = document.getElementById("mensajeBandeja");
+      mensaje.className = "text-info";
+      mensaje.innerText = "Cargando ordenes...";
+      try {
+        const res = await fetch("/api/ordenes", { headers: { "X-Rol": "laboratorista" } });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "No se pudieron cargar las ordenes.");
+        ordenes = data.ordenes || [];
+        renderOrdenes();
+        mensaje.innerText = ordenes.length ? "" : "No hay ordenes registradas.";
+      } catch (error) {
+        mensaje.className = "text-danger fw-bold";
+        mensaje.innerText = error.message;
+      }
+    }
+
+    function renderOrdenes() {
+      const filtro = (document.getElementById("filtroOrdenes")?.value || "").toLowerCase();
+      const tbody = document.getElementById("tablaOrdenes");
+      tbody.innerHTML = "";
+      ordenes
+        .filter(o => `${o.folio || ""} ${o.paciente_nombre || ""} ${o.paciente_apellidos || ""} ${o.tipo_estudio || ""} ${o.estado || ""}`.toLowerCase().includes(filtro))
+        .forEach(o => {
+          const paciente = `${o.paciente_nombre || ""} ${o.paciente_apellidos || ""}`.trim() || `Paciente ${o.id_paciente}`;
+          const tr = document.createElement("tr");
+          tr.onclick = () => abrirCaptura(o);
+          tr.innerHTML = `<td>${o.folio || "EST-" + String(o.id_orden).padStart(4, "0")}</td><td>${paciente}</td><td>${o.tipo_estudio || ""}</td><td>${o.fecha_solicitud || ""}</td><td>${badgeEstado(o.estado)}</td>`;
+          tbody.appendChild(tr);
+        });
+    }
+
+    function abrirCaptura(orden) {
+      document.getElementById("idOrden").value = orden.id_orden;
+      document.getElementById("folioOrden").value = orden.folio || "";
+      document.getElementById("lblFolio").innerText = orden.folio || `EST-${String(orden.id_orden).padStart(4, "0")}`;
+      document.getElementById("lblPaciente").innerText = `${orden.paciente_nombre || ""} ${orden.paciente_apellidos || ""}`.trim() || `Paciente ${orden.id_paciente}`;
+      document.getElementById("lblEstudio").innerText = orden.tipo_estudio || "";
+      setEstadoVisual(orden.estado || "Solicitado");
+      const bloqueado = orden.estado === "Liberado" || orden.estado === "Cancelado";
+      document.querySelectorAll(".resultado-input, #observacionesClinicas, #btnGuardarResultados, #btnLiberarResultados").forEach(el => el.disabled = bloqueado);
+      document.getElementById("mensajeServidorLab").innerText = "";
+      mostrarVista("captura");
+    }
+
+    function setEstadoVisual(estado) {
+      const lbl = document.getElementById("lblEstado");
+      lbl.innerText = estado;
+      lbl.style.color = estado === "Liberado" ? "#27ae60" : estado === "Realizado" ? "#2980b9" : estado === "Cancelado" ? "#7f8c8d" : "#d35400";
+    }
+
+    function datosResultados() {
+      const idOrden = document.getElementById("idOrden").value;
+      const folio = document.getElementById("folioOrden").value;
+      if (!idOrden && !folio) throw new Error("Seleccione una orden antes de guardar resultados.");
+      return {
+        id_orden: idOrden ? Number(idOrden) : undefined,
+        folio,
+        resultados: {
+          hemoglobina: document.getElementById("resHemoglobina").value,
+          leucocitos: document.getElementById("resLeucocitos").value,
+          plaquetas: document.getElementById("resPlaquetas").value,
+          hematocrito: document.getElementById("resHematocrito").value
+        },
+        observaciones: document.getElementById("observacionesClinicas").value
+      };
+    }
+
+    async function guardarResultados() {
+      const mensaje = document.getElementById("mensajeServidorLab");
+      try {
+        const res = await fetch("/api/resultados", { method:"POST", headers:headersLab, body:JSON.stringify(datosResultados()) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "No se pudieron guardar los resultados.");
+        mensaje.className = "text-success fw-bold mt-3";
+        mensaje.innerText = "Resultados guardados. Estado: Realizado.";
+        setEstadoVisual("Realizado");
+        await cargarOrdenes();
+      } catch (error) {
+        mensaje.className = "text-danger fw-bold mt-3";
+        mensaje.innerText = error.message;
+      }
+    }
+
+    async function procesarLiberacion() {
+      const mensaje = document.getElementById("mensajeServidorLab");
+      try {
+        const datos = datosResultados();
+        await guardarResultados();
+        const res = await fetch("/api/resultados/liberar", { method:"PUT", headers:headersLab, body:JSON.stringify({ id_orden: datos.id_orden, folio: datos.folio }) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "No se pudieron liberar los resultados.");
+        mensaje.className = "text-success fw-bold mt-3";
+        mensaje.innerText = data.mensaje;
+        setEstadoVisual("Liberado");
+        document.querySelectorAll(".resultado-input, #observacionesClinicas, #btnGuardarResultados, #btnLiberarResultados").forEach(el => el.disabled = true);
+        await cargarOrdenes();
+      } catch (error) {
+        mensaje.className = "text-danger fw-bold mt-3";
+        mensaje.innerText = error.message;
+      }
+    }
+
+    async function consultarExpediente() {
+      const id = document.getElementById("idPacienteExpediente").value;
+      const cont = document.getElementById("resultadoExpediente");
+      if (!id) { cont.innerHTML = '<div class="text-danger fw-bold">Ingrese el ID del paciente.</div>'; return; }
+      const res = await fetch(`/api/expedientes/${id}`, { headers: { "X-Rol": "laboratorista" } });
+      const data = await res.json();
+      if (!res.ok) { cont.innerHTML = `<div class="text-danger fw-bold">${data.error}</div>`; return; }
+      const estudios = (data.estudios || []).map(e => `<tr><td>${e.folio || ""}</td><td>${e.tipo_estudio || ""}</td><td>${e.estado || ""}</td><td>${e.observaciones || ""}</td></tr>`).join("");
+      cont.innerHTML = `<div class="info-box"><strong>${data.paciente.nombre} ${data.paciente.apellidos || ""}</strong><br>CURP: ${data.paciente.curp || ""}</div><table class="table border"><thead><tr><th>Folio</th><th>Estudio</th><th>Estado</th><th>Observaciones</th></tr></thead><tbody>${estudios}</tbody></table>`;
+    }
+
+    async function cargarReportes() {
+      const cont = document.getElementById("resultadoReportes");
+      const res = await fetch("/api/reportes", { headers: { "X-Rol": "laboratorista" } });
+      const data = await res.json();
+      if (!res.ok) { cont.innerHTML = `<div class="text-danger fw-bold">${data.error}</div>`; return; }
+      cont.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+    }
+  </script>
+</body>
+</html>

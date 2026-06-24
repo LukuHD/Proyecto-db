@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HospitalSys - Recepcion</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root { --azul-header:#34495e; --azul-btn:#347ebb; --bg-sidebar:#ecf0f1; }
+    body { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#fdfdfd; margin:0; }
+    .top-header { background:var(--azul-header); color:white; padding:10px 20px; display:flex; justify-content:space-between; align-items:center; }
+    .top-header h4 { margin:0; font-size:18px; font-weight:600; }
+    .user-info { font-size:14px; color:#dcdde1; }
+    .main-wrapper { display:flex; min-height:calc(100vh - 44px); }
+    .sidebar { width:250px; background:var(--bg-sidebar); border-right:1px solid #ddd; flex-shrink:0; }
+    .sidebar-menu { list-style:none; padding:0; margin:0; }
+    .sidebar-menu li { border-bottom:1px solid #e0e0e0; }
+    .sidebar-menu a { display:block; padding:15px 20px; color:#333; text-decoration:none; font-size:14px; cursor:pointer; }
+    .sidebar-menu a.active { background:#dbe4eb; color:var(--azul-btn); font-weight:bold; border-left:4px solid var(--azul-btn); }
+    .content { flex-grow:1; padding:30px; max-width:1050px; }
+    .form-title { font-size:22px; font-weight:bold; color:#2c3e50; margin-bottom:5px; }
+    .form-subtitle { font-size:13px; color:#7f8c8d; margin-bottom:25px; }
+    .form-label { font-size:13px; color:#555; margin-bottom:4px; font-weight:600; }
+    .form-control, .form-select { font-size:14px; border-radius:4px; }
+    .btn-guardar { background:var(--azul-btn); color:white; padding:8px 24px; border:0; font-weight:600; border-radius:4px; }
+    .btn-validar, .btn-cancelar { background:white; color:var(--azul-btn); border:1px solid var(--azul-btn); padding:8px 20px; font-weight:600; border-radius:4px; }
+    .required-mark { color:#e74c3c; }
+    .text-danger { font-size:12px; font-weight:bold; }
+    .vista { display:none; }
+    .vista.activa { display:block; }
+    .slot { border:1px solid #ccc; border-radius:6px; padding:10px 15px; margin-bottom:10px; display:flex; justify-content:space-between; font-weight:600; font-size:13px; }
+    .slot.ocupado { background:#f9ecec; border-color:#e5b3b3; color:#a94442; }
+    .slot.disponible { background:#eef6ec; border-color:#b5d5ad; color:#3c763d; cursor:pointer; }
+    .slot.seleccionado { background:#ebf4fa; border-color:#a3cce8; color:#31708f; border-width:2px; }
+  </style>
+</head>
+<body>
+  <header class="top-header">
+    <h4 id="headerTitle">HospitalSys - Registro de paciente</h4>
+    <div class="user-info">Recepcionista - ACT-01</div>
+  </header>
+
+  <div class="main-wrapper">
+    <aside class="sidebar">
+      <ul class="sidebar-menu">
+        <li><a id="navRegistro" class="active" onclick="mostrarVista('registro')">Pacientes</a></li>
+        <li><a id="navAgenda" onclick="mostrarVista('agenda')">Agenda de citas</a></li>
+        <li><a id="navLab" onclick="mostrarVista('lab')">Citas de laboratorio</a></li>
+        <li><a id="navReportes" onclick="mostrarVista('reportes')">Reportes</a></li>
+      </ul>
+    </aside>
+
+    <main class="content">
+      <div id="vistaRegistro" class="vista activa">
+        <h1 class="form-title">Registrar paciente nuevo</h1>
+        <p class="form-subtitle">Los campos marcados con <span class="required-mark">*</span> son obligatorios.</p>
+        <form id="formRegistroPaciente" novalidate>
+          <div class="row mb-3">
+            <div class="col-md-4"><label class="form-label">Nombre(s) <span class="required-mark">*</span></label><input type="text" class="form-control" id="nombres" oninput="soloLetras(this)" required><div id="errorNombres" class="text-danger mt-1"></div></div>
+            <div class="col-md-4"><label class="form-label">Apellidos <span class="required-mark">*</span></label><input type="text" class="form-control" id="apellidos" oninput="soloLetras(this)" required><div id="errorApellidos" class="text-danger mt-1"></div></div>
+            <div class="col-md-4"><label class="form-label">CURP <span class="required-mark">*</span></label><input type="text" class="form-control" id="curp" maxlength="18" style="text-transform:uppercase;" required><div id="errorCurp" class="text-danger mt-1"></div></div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-3"><label class="form-label">Fecha de nacimiento <span class="required-mark">*</span></label><input type="date" class="form-control" id="fechaNac" required><div id="errorFechaNac" class="text-danger mt-1"></div></div>
+            <div class="col-md-2"><label class="form-label">Sexo <span class="required-mark">*</span></label><select class="form-select" id="sexo" required><option value="">--</option><option value="M">Femenino</option><option value="H">Masculino</option></select><div id="errorSexo" class="text-danger mt-1"></div></div>
+            <div class="col-md-3"><label class="form-label">Telefono <span class="required-mark">*</span></label><input type="text" class="form-control" id="telefono" maxlength="10" oninput="soloNumeros(this)" required><div id="errorTelefono" class="text-danger mt-1"></div></div>
+            <div class="col-md-4"><label class="form-label">Correo electronico</label><input type="email" class="form-control" id="correo"><div id="errorCorreo" class="text-danger mt-1"></div></div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-8"><label class="form-label">Direccion <span class="required-mark">*</span></label><input type="text" class="form-control" id="direccion" required><div id="errorDireccion" class="text-danger mt-1"></div></div>
+            <div class="col-md-4"><label class="form-label">Tipo de sangre</label><select class="form-select" id="tipoSangre"><option value="">Seleccione...</option><option>O+</option><option>O-</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option></select></div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6"><label class="form-label">Alergias</label><input type="text" class="form-control" id="alergias"></div>
+            <div class="col-md-6"><label class="form-label">Enfermedades cronicas</label><input type="text" class="form-control" id="enfCronicas"></div>
+          </div>
+          <div class="row mb-4">
+            <div class="col-md-12"><label class="form-label">Contacto de emergencia</label><input type="text" class="form-control" id="contactoEmergencia"></div>
+          </div>
+          <div class="d-flex gap-3 mt-4">
+            <button type="submit" class="btn-guardar">Guardar paciente</button>
+            <button type="reset" class="btn-cancelar" onclick="limpiarErrores()">Cancelar</button>
+          </div>
+          <div id="mensajeServidor" class="mt-3 fw-bold"></div>
+        </form>
+      </div>
+
+      <div id="vistaAgenda" class="vista">
+        <h1 class="form-title">Agendar cita de especialidad</h1>
+        <p class="form-subtitle">Valida disponibilidad del medico antes de registrar.</p>
+        <form id="formCita" class="row g-3">
+          <div class="col-md-3"><label class="form-label">ID paciente</label><input id="citaPaciente" type="number" class="form-control" required></div>
+          <div class="col-md-3"><label class="form-label">ID medico</label><input id="citaMedico" type="number" class="form-control" value="1" required></div>
+          <div class="col-md-3"><label class="form-label">Fecha</label><input id="citaFecha" type="date" class="form-control" required></div>
+          <div class="col-md-3"><label class="form-label">Hora</label><input id="citaHora" type="time" class="form-control" required></div>
+          <div class="col-md-12"><label class="form-label">Motivo</label><input id="citaMotivo" type="text" class="form-control" required></div>
+          <div class="col-md-12 d-flex gap-2"><button type="button" class="btn-validar" onclick="validarAgenda()">Validar disponibilidad</button><button class="btn-guardar" type="submit">Agendar cita</button></div>
+        </form>
+        <div id="agendaSlots" class="mt-4"></div>
+        <div id="mensajeCita" class="mt-3 fw-bold"></div>
+      </div>
+
+      <div id="vistaLab" class="vista">
+        <h1 class="form-title">Agendar cita de laboratorio</h1>
+        <p class="form-subtitle">La toma de muestra debe programarse entre 7 y 14 dias antes de la consulta.</p>
+        <form id="formCitaLaboratorio" class="row g-3">
+          <div class="col-md-3"><label class="form-label">ID orden</label><input type="number" class="form-control" id="labIdOrden" required></div>
+          <div class="col-md-3"><label class="form-label">Fecha consulta</label><input type="date" class="form-control" id="labFechaConsulta" required></div>
+          <div class="col-md-3"><label class="form-label">Fecha laboratorio</label><input type="date" class="form-control" id="labFechaLaboratorio" required><div id="errorFechaLab" class="text-danger mt-1"></div></div>
+          <div class="col-md-3"><label class="form-label">Hora</label><input type="time" class="form-control" id="labHora" required></div>
+          <div class="col-md-12"><button type="submit" class="btn-guardar">Registrar cita de laboratorio</button></div>
+        </form>
+        <div id="mensajeLabRecepcion" class="mt-3 fw-bold"></div>
+      </div>
+
+      <div id="vistaReportes" class="vista">
+        <h1 class="form-title">Reportes basicos</h1>
+        <button class="btn-guardar mb-3" onclick="cargarReportesRecepcion()">Actualizar reportes</button>
+        <div id="resultadoReportesRecepcion"></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/static/js/validacion.js"></script>
+  <script>
+    function mostrarVista(vista) {
+      document.querySelectorAll('.vista').forEach(el => el.classList.remove('activa'));
+      document.querySelectorAll('.sidebar-menu a').forEach(el => el.classList.remove('active'));
+      const map = { registro:'Registro', agenda:'Agenda', lab:'Lab', reportes:'Reportes' };
+      document.getElementById('vista' + map[vista]).classList.add('activa');
+      document.getElementById('nav' + map[vista]).classList.add('active');
+      document.getElementById('headerTitle').innerText = 'HospitalSys - ' + document.getElementById('nav' + map[vista]).innerText;
+      if (vista === 'reportes') cargarReportesRecepcion();
+    }
+
+    document.getElementById('formRegistroPaciente').addEventListener('submit', async function(event) {
+      event.preventDefault();
+      const mensajeServidor = document.getElementById('mensajeServidor');
+      const datosPaciente = extraerYValidarPaciente();
+      if (!datosPaciente) return;
+      try {
+        const respuesta = await fetch('/api/pacientes', { method:'POST', headers:{ 'Content-Type':'application/json', 'X-Rol':'recepcionista' }, body:JSON.stringify(datosPaciente) });
+        const resultado = await respuesta.json();
+        if (!respuesta.ok) throw new Error(resultado.error || 'No se pudo registrar el paciente.');
+        mensajeServidor.className = 'mt-3 fw-bold text-success';
+        mensajeServidor.innerText = 'MSG-01: Paciente registrado con exito. ID asignado: ' + resultado.id_paciente;
+        this.reset();
+      } catch (error) {
+        mensajeServidor.className = 'mt-3 fw-bold text-danger';
+        mensajeServidor.innerText = error.message;
+      }
+    });
+
+    document.getElementById('formCita').addEventListener('submit', async function(event) {
+      event.preventDefault();
+      const mensaje = document.getElementById('mensajeCita');
+      try {
+        const respuesta = await fetch('/api/citas', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json', 'X-Rol':'recepcionista' },
+          body:JSON.stringify({
+            id_paciente:Number(document.getElementById('citaPaciente').value),
+            id_medico:Number(document.getElementById('citaMedico').value),
+            fecha:document.getElementById('citaFecha').value,
+            hora:document.getElementById('citaHora').value,
+            motivo:document.getElementById('citaMotivo').value
+          })
+        });
+        const data = await respuesta.json();
+        if (!respuesta.ok) throw new Error(data.error || 'No se pudo agendar la cita.');
+        mensaje.className = 'mt-3 fw-bold text-success';
+        mensaje.innerText = data.mensaje + ' ID: ' + data.id_cita;
+        this.reset();
+      } catch (error) {
+        mensaje.className = 'mt-3 fw-bold text-danger';
+        mensaje.innerText = error.message;
+      }
+    });
+
+    async function validarAgenda() {
+      const idMedico = document.getElementById('citaMedico').value;
+      const fecha = document.getElementById('citaFecha').value;
+      const cont = document.getElementById('agendaSlots');
+      if (!idMedico || !fecha) { cont.innerHTML = '<div class="text-danger">Ingrese medico y fecha.</div>'; return; }
+      const respuesta = await fetch(`/api/citas/agenda?id_medico=${idMedico}&fecha=${fecha}`, { headers:{ 'X-Rol':'recepcionista' } });
+      const data = await respuesta.json();
+      if (!respuesta.ok) { cont.innerHTML = `<div class="text-danger fw-bold">${data.error}</div>`; return; }
+      cont.innerHTML = '<h5 class="form-title" style="font-size:16px;">Disponibilidad</h5>' + data.bloques.map(b => `<div class="slot ${b.estado === 'Disponible' ? 'disponible' : 'ocupado'}" onclick="seleccionarHoraAgenda('${b.hora}', '${b.estado}')"><span>${b.hora}</span><span>${b.estado}</span></div>`).join('');
+    }
+
+    function seleccionarHoraAgenda(hora, estado) {
+      if (estado !== 'Disponible') return;
+      document.getElementById('citaHora').value = hora;
+    }
+
+    document.getElementById('formCitaLaboratorio').addEventListener('submit', async function(event) {
+      event.preventDefault();
+      const mensaje = document.getElementById('mensajeLabRecepcion');
+      const fechaConsulta = document.getElementById('labFechaConsulta').value;
+      const fechaLab = document.getElementById('labFechaLaboratorio').value;
+      if (!validarTemporalidadLaboratorio(fechaConsulta, fechaLab)) return;
+      try {
+        const respuesta = await fetch('/api/citas-laboratorio', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json', 'X-Rol':'recepcionista' },
+          body:JSON.stringify({
+            id_orden:Number(document.getElementById('labIdOrden').value),
+            fecha_consulta:fechaConsulta,
+            fecha_laboratorio:fechaLab,
+            hora:document.getElementById('labHora').value
+          })
+        });
+        const data = await respuesta.json();
+        if (!respuesta.ok) throw new Error(data.error || 'No se pudo registrar la cita de laboratorio.');
+        mensaje.className = 'mt-3 fw-bold text-success';
+        mensaje.innerText = data.mensaje;
+        this.reset();
+      } catch (error) {
+        mensaje.className = 'mt-3 fw-bold text-danger';
+        mensaje.innerText = error.message;
+      }
+    });
+
+    async function cargarReportesRecepcion() {
+      const cont = document.getElementById('resultadoReportesRecepcion');
+      try {
+        const respuesta = await fetch('/api/reportes', { headers:{ 'X-Rol':'recepcionista' } });
+        const data = await respuesta.json();
+        if (!respuesta.ok) throw new Error(data.error || 'No se pudieron cargar reportes.');
+        const tabla = obj => Object.entries(obj || {}).map(([k,v]) => `<tr><td>${k}</td><td class="fw-bold">${v}</td></tr>`).join('') || '<tr><td>Sin datos</td></tr>';
+        cont.innerHTML = `<div class="row"><div class="col-md-6"><h5>Citas por estado</h5><table class="table border"><tbody>${tabla(data.citas_por_estado)}</tbody></table></div><div class="col-md-6"><h5>Estudios por estado</h5><table class="table border"><tbody>${tabla(data.estudios_por_estado)}</tbody></table></div></div>`;
+      } catch (error) {
+        cont.innerHTML = `<div class="text-danger fw-bold">${error.message}</div>`;
+      }
+    }
+  </script>
+</body>
+</html>
