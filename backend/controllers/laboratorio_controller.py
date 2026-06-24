@@ -37,8 +37,11 @@ def obtener_ordenes():
 
 def crear_orden(data=None):
     data = data or request_data()
-    required = ["id_paciente", "tipo_estudio", "fecha_solicitud", "medico", "especialidad", "descripcion"]
+    fecha_orden = data.get("fecha_solicitud") or data.get("fecha")
+    required = ["id_paciente", "tipo_estudio", "medico", "especialidad", "descripcion"]
     missing = [field for field in required if not data.get(field)]
+    if not fecha_orden:
+        missing.append("fecha_solicitud")
     if missing:
         return api_error("Campos obligatorios faltantes: " + ", ".join(missing), 400)
 
@@ -59,7 +62,8 @@ def crear_orden(data=None):
                 "id_paciente": data.get("id_paciente"),
                 "id_medico": data.get("id_medico") or data.get("medico_id") or 1,
                 "tipo_estudio": data.get("tipo_estudio"),
-                "fecha_solicitud": data.get("fecha_solicitud"),
+                "fecha_solicitud": fecha_orden,
+                "fecha": fecha_orden,
                 "medico": data.get("medico"),
                 "especialidad": data.get("especialidad"),
                 "descripcion": data.get("descripcion"),
